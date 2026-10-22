@@ -1,0 +1,1596 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Batch API · Responses</title>
+<style>
+  :root {
+    --bg:#f8f9fa; --card:#fff; --border:#dee2e6; --text:#212529; --muted:#6c757d;
+    --accent:#0d6efd; --danger:#dc3545; --flex:#6f42c1; --radius:8px;
+  }
+  * { box-sizing:border-box; margin:0; padding:0; }
+  body {
+    font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+    background:var(--bg); color:var(--text); line-height:1.5; padding:24px;
+  }
+  .container { max-width:1100px; margin:0 auto; }
+  header { margin-bottom:20px; }
+  header h1 { font-size:1.5rem; font-weight:600; }
+  header p { color:var(--muted); font-size:.88rem; }
+  .card {
+    background:var(--card); border:1px solid var(--border); border-radius:var(--radius);
+    padding:18px; margin-bottom:18px;
+  }
+  .card h2 { font-size:1.05rem; font-weight:600; margin-bottom:10px; }
+  .card h3 { font-size:.95rem; font-weight:600; margin:14px 0 6px; }
+  label { display:block; font-size:.82rem; font-weight:500; margin-bottom:4px; color:var(--muted); }
+  input[type="text"], input[type="file"], select, textarea {
+    width:100%; padding:7px 10px; border:1px solid var(--border); border-radius:6px;
+    font-size:.88rem; font-family:inherit; background:#fff; color:var(--text);
+  }
+  textarea { min-height:80px; resize:vertical; }
+  input:focus, select:focus, textarea:focus { outline:2px solid var(--accent); border-color:transparent; }
+  .row { display:flex; gap:10px; flex-wrap:wrap; align-items:flex-end; margin-bottom:10px; }
+  .row > * { flex:1; min-width:150px; }
+  .row > .shrink { flex:0 0 auto; min-width:0; }
+  button {
+    padding:7px 14px; border:none; border-radius:6px; font-size:.88rem; font-weight:500;
+    cursor:pointer; transition:background .15s;
+  }
+  button:disabled { opacity:.55; cursor:not-allowed; }
+  .btn-primary { background:var(--accent); color:#fff; }
+  .btn-primary:hover:not(:disabled) { background:#0b5ed7; }
+  .btn-flex { background:var(--flex); color:#fff; }
+  .btn-flex:hover:not(:disabled) { background:#5a36a0; }
+  .btn-secondary { background:#e9ecef; color:var(--text); }
+  .btn-secondary:hover:not(:disabled) { background:#dde0e3; }
+  .btn-danger { background:var(--danger); color:#fff; }
+  .btn-sm { padding:3px 9px; font-size:.78rem; }
+  .muted { color:var(--muted); font-size:.8rem; }
+  .hidden { display:none !important; }
+  .message { padding:9px 12px; border-radius:6px; font-size:.84rem; margin-top:10px; }
+  .message-info    { background:#cfe2ff; color:#084298; }
+  .message-success { background:#d1e7dd; color:#0f5132; }
+  .message-error   { background:#f8d7da; color:#842029; }
+  .message-warn    { background:#fff3cd; color:#856404; }
+  .badge {
+    display:inline-block; padding:1px 6px; border-radius:4px; font-size:.72rem;
+    font-weight:600; background:#e9ecef; color:#495057;
+  }
+  .badge-flex { background:#e0d4f5; color:#4a2c8a; }
+  .status {
+    display:inline-block; padding:2px 8px; border-radius:12px; font-size:.7rem;
+    font-weight:600; text-transform:uppercase; letter-spacing:.02em;
+  }
+  .status-validating { background:#fff3cd; color:#856404; }
+  .status-queued { background:#e2e3e5; color:#41464b; }
+  .status-in_progress { background:#cfe2ff; color:#084298; }
+  .status-finalizing, .status-completed { background:#d1e7dd; color:#0f5132; }
+  .status-failed, .status-incomplete { background:#f8d7da; color:#842029; }
+  .status-expired, .status-cancelling, .status-cancelled { background:#e2e3e5; color:#41464b; }
+  table { width:100%; border-collapse:collapse; font-size:.83rem; }
+  th, td { text-align:left; padding:7px 6px; border-bottom:1px solid var(--border); vertical-align:middle; }
+  th { font-weight:600; color:var(--muted); font-size:.7rem; text-transform:uppercase; letter-spacing:.04em; }
+  td .actions { display:flex; gap:4px; flex-wrap:wrap; }
+  #backgroundTableBody, #batchTableBody { content-visibility:auto; contain-intrinsic-size:400px; }
+  .spinner {
+    display:inline-block; width:14px; height:14px;
+    border:2px solid rgba(255,255,255,.4); border-top-color:#fff; border-radius:50%;
+    animation:spin .6s linear infinite; vertical-align:middle; margin-right:6px;
+  }
+  @keyframes spin { to { transform:rotate(360deg); } }
+
+  .role-tabs { display:flex; gap:0; border-bottom:1px solid var(--border); margin-bottom:8px; }
+  .role-tab {
+    padding:5px 14px; background:transparent; border:1px solid transparent; border-bottom:none;
+    cursor:pointer; font-size:.82rem; border-radius:6px 6px 0 0; color:var(--muted);
+  }
+  .role-tab.active {
+    background:#fff; border-color:var(--border); border-bottom:1px solid #fff;
+    margin-bottom:-1px; color:var(--text); font-weight:600;
+  }
+  .role-tab:hover:not(.active) { background:#f1f3f5; }
+
+  .message-card {
+    border:1px solid var(--border); border-radius:6px; padding:8px 10px;
+    margin-bottom:6px; background:#f8f9fa;
+  }
+  .message-card .role {
+    font-size:.68rem; font-weight:700; text-transform:uppercase; letter-spacing:.05em;
+    margin-bottom:3px;
+  }
+  .message-card .role.system    { color:#6f42c1; }
+  .message-card .role.user      { color:#0d6efd; }
+  .message-card .role.assistant { color:#198754; }
+  .message-card .content {
+    font-size:.84rem; white-space:pre-wrap; word-break:break-word;
+    max-height:120px; overflow-y:auto;
+  }
+  .message-card .msg-actions { margin-top:5px; display:flex; gap:4px; }
+
+  .file-chip {
+    display:inline-flex; align-items:center; gap:6px;
+    padding:3px 8px; margin:4px 4px 0 0;
+    background:#e9ecef; border-radius:14px; font-size:.78rem;
+  }
+  .file-chip button {
+    background:transparent; color:#495057; padding:0 4px; font-size:14px; line-height:1;
+  }
+  .file-chip button:hover { color:var(--danger); }
+
+  .request-card {
+    border:1px solid var(--border); border-radius:6px; padding:8px 10px;
+    margin-bottom:6px; background:#fff;
+  }
+  .request-card .request-head { display:flex; justify-content:space-between; align-items:center; gap:8px; }
+  .request-card .preview { font-size:.78rem; color:var(--muted); margin-top:4px; word-break:break-word; }
+
+  details > summary { cursor:pointer; font-size:.85rem; color:var(--accent); user-select:none; }
+  details[open] > summary { margin-bottom:8px; }
+
+  .token-readout {
+    background:#e9ecef; padding:6px 10px; border-radius:6px;
+    font-family:ui-monospace,monospace; font-size:.82rem;
+    display:flex; justify-content:space-between; align-items:center;
+    margin-top:8px;
+  }
+  .token-readout .label { color:var(--muted); font-family:system-ui,sans-serif; }
+  .token-readout .value { font-weight:700; }
+
+  .uploaded-file-row {
+    display:flex; align-items:center; gap:8px; padding:6px 0;
+    border-bottom:1px solid var(--border); font-size:.84rem;
+  }
+  .uploaded-file-row:last-child { border-bottom:none; }
+  .uploaded-file-row .file-id { font-family:ui-monospace,monospace; font-size:.78rem; }
+  .uploaded-file-row .meta { color:var(--muted); font-size:.75rem; }
+  .uploaded-file-row .grow { flex:1; }
+</style>
+</head>
+<body>
+<div class="container">
+  <header>
+    <h1>Batch API · Responses</h1>
+    <p>Compose messages, submit to Batch or dispatch as Background Flex, choose a prompt-cache TTL, and optionally continue a prior stored response.</p>
+  </header>
+
+  <!-- ===================== Batch settings ===================== -->
+  <section class="card">
+    <h2>Batch Settings</h2>
+    <div class="row">
+      <div>
+        <label for="modelInput">Model</label>
+        <input type="text" id="modelInput" list="modelList" placeholder="e.g. gpt-6-astra">
+        <datalist id="modelList"></datalist>
+      </div>
+      <div>
+        <label for="reasoningEffortSelect">Reasoning effort</label>
+        <select id="reasoningEffortSelect">
+          <option value="none">none (omit reasoning)</option>
+          <option value="minimal">minimal</option>
+          <option value="low">low</option>
+          <option value="medium">medium</option>
+          <option value="high">high</option>
+          <option value="xhigh">xhigh</option>
+          <option value="max" selected>max</option>
+        </select>
+      </div>
+      <div>
+        <label for="cacheTTLSelect">Prompt cache TTL</label>
+        <select id="cacheTTLSelect">
+          <option value="12h" selected>12h (GPT-5.6+, 2.5× write)</option>
+          <option value="30m">30m (GPT-5.6+ default, 1.25× write)</option>
+          <option value="24h">24h (legacy models only)</option>
+          <option value="nocache">No caching (0 % write premium)</option>
+          <option value="none">None (omit parameter)</option>
+        </select>
+      </div>
+      <div class="shrink">
+        <button type="button" class="btn-secondary" id="fetchModelsBtn">Refresh models</button>
+        <span id="modelsStatus" class="muted" style="margin-left:6px;font-size:.78rem"></span>
+      </div>
+    </div>
+    <div id="ttlWarning" class="message hidden"></div>
+    <label for="metadataInput" style="margin-top:10px">Metadata (optional JSON, ≤16 flat string pairs)</label>
+    <input type="text" id="metadataInput" placeholder='{"job":"nightly-eval"}'>
+    <p class="muted" style="margin-top:6px">Model, reasoning effort, and cache TTL apply to every request in this batch and to Background Flex dispatches.</p>
+  </section>
+
+  <!-- ===================== Compose one request ===================== -->
+  <section class="card">
+    <h2>Compose Request</h2>
+    <div class="row">
+      <div>
+        <label for="customIdInput">Custom ID (used for Batch; ignored for Background Flex)</label>
+        <input type="text" id="customIdInput" placeholder="auto-generated">
+      </div>
+      <div class="shrink">
+        <button type="button" class="btn-secondary" id="regenIdBtn">Regenerate</button>
+      </div>
+    </div>
+
+    <div class="role-tabs" id="roleTabs">
+      <button type="button" class="role-tab" data-role="system">System</button>
+      <button type="button" class="role-tab active" data-role="user">User</button>
+      <button type="button" class="role-tab" data-role="assistant">Assistant</button>
+    </div>
+    <textarea id="messageInput" placeholder="Message content… (Ctrl+Enter to add)"></textarea>
+
+    <div class="row" style="margin-top:8px">
+      <div class="shrink">
+        <label for="fileInput">Attach text files (multiple allowed)</label>
+        <input type="file" id="fileInput" multiple
+               accept=".txt,.md,.json,.csv,.py,.js,.ts,.html,.xml,.yaml,.yml,.log">
+      </div>
+      <div class="shrink">
+        <button type="button" class="btn-primary" id="addMessageBtn">Add message</button>
+      </div>
+    </div>
+    <div id="attachedFiles"></div>
+
+    <h3>Messages in this request</h3>
+    <div id="composerMessages"></div>
+
+    <div class="token-readout">
+      <span class="label">Input tokens (approx., ~4 chars/token)</span>
+      <span class="value" id="composerTokenCount">—</span>
+    </div>
+    <div style="margin-top:6px;display:flex;gap:6px;align-items:center;flex-wrap:wrap">
+      <button type="button" class="btn-secondary btn-sm" id="verifyComposerTokensBtn" disabled>Count tokens (exact)</button>
+      <span id="composerServerTokenResult" class="muted"></span>
+    </div>
+
+    <label for="previousResponseIdInput" style="margin-top:12px">Previous response ID (optional, Background Flex only)</label>
+    <input type="text" id="previousResponseIdInput" list="previousResponseList"
+           placeholder="resp_… — leave blank for a fresh response">
+    <datalist id="previousResponseList"></datalist>
+    <p class="muted" style="margin-top:4px">Pick a stored Background Flex response, or type any <code>resp_…</code> ID. Batch requests are stateless and ignore this field.</p>
+
+    <label for="extraParamsInput" style="margin-top:12px">Extra body params (JSON, optional)</label>
+    <textarea id="extraParamsInput"
+              style="min-height:48px;font-family:ui-monospace,monospace;font-size:.8rem"
+              placeholder='{"temperature":0.7}'></textarea>
+
+    <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap">
+      <button type="button" class="btn-primary" id="addRequestBtn">Add request to batch</button>
+      <button type="button" class="btn-flex" id="submitFlexBtn" disabled>Submit as Background Flex</button>
+      <button type="button" class="btn-secondary" id="clearComposerBtn">Clear composer</button>
+    </div>
+    <p class="muted" style="margin-top:6px">Background Flex dispatches a single <code>/v1/responses</code> call with <code>background:true</code> and <code>service_tier:"flex"</code>. Same price as Batch; usually faster.</p>
+    <div id="composerMsg" class="message hidden"></div>
+  </section>
+
+  <!-- ===================== Current batch ===================== -->
+  <section class="card">
+    <h2>Current Batch <span id="requestCount" class="badge">0</span></h2>
+    <div id="requestList"></div>
+
+    <details style="margin-top:12px">
+      <summary>Preview payload</summary>
+      <div class="muted" id="payloadSummary" style="margin-bottom:6px"></div>
+
+      <label>Batch creation body (POST /v1/batches)</label>
+      <textarea id="batchBodyPreview" readonly
+                style="min-height:60px;font-family:ui-monospace,monospace;font-size:.78rem"></textarea>
+
+      <label style="margin-top:8px">First request (pretty-printed)</label>
+      <textarea id="requestPrettyPreview" readonly
+                style="min-height:120px;font-family:ui-monospace,monospace;font-size:.78rem"></textarea>
+
+      <label style="margin-top:8px">JSONL preview (first 20 lines)</label>
+      <textarea id="jsonlPreview" readonly
+                style="min-height:120px;font-family:ui-monospace,monospace;font-size:.78rem"></textarea>
+
+      <div class="token-readout" style="margin-top:10px">
+        <span class="label">Total input tokens in batch (approx., ~4 chars/token)</span>
+        <span class="value" id="batchTokenCount">—</span>
+      </div>
+    </details>
+
+    <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap">
+      <button type="button" class="btn-primary" id="uploadBtn" disabled>Upload JSONL</button>
+      <button type="button" class="btn-secondary" id="downloadJsonlBtn" disabled>Download JSONL</button>
+      <button type="button" class="btn-danger" id="clearBatchBtn">Clear Batch</button>
+    </div>
+    <div id="uploadMsg" class="message hidden"></div>
+
+    <div id="uploadedFilesSection" style="margin-top:14px">
+      <h3>Uploaded files <span class="badge" id="uploadedFileCount">0</span></h3>
+      <div id="uploadedFileList"></div>
+    </div>
+  </section>
+
+  <!-- ===================== Background Responses ===================== -->
+  <section class="card">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;gap:8px;flex-wrap:wrap">
+      <h2 style="margin:0">Background Responses <span class="badge badge-flex">Flex</span></h2>
+      <div style="display:flex;gap:8px">
+        <button type="button" class="btn-secondary btn-sm" id="refreshBackgroundBtn">Refresh All</button>
+        <button type="button" class="btn-secondary btn-sm" id="clearBackgroundBtn">Clear</button>
+      </div>
+    </div>
+    <div style="overflow-x:auto">
+      <table>
+        <thead>
+          <tr>
+            <th>Response ID</th>
+            <th>Status</th>
+            <th>Model</th>
+            <th>Created</th>
+            <th>Prompt preview</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="backgroundTableBody">
+          <tr><td colspan="6" class="muted" style="text-align:center;padding:18px">No background responses yet.</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div id="backgroundMsg" class="message hidden"></div>
+  </section>
+
+  <!-- ===================== Batch History ===================== -->
+  <section class="card">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;gap:8px;flex-wrap:wrap">
+      <h2 style="margin:0">Batch History</h2>
+      <div style="display:flex;gap:8px">
+        <button type="button" class="btn-secondary btn-sm" id="refreshAllBtn">Refresh All</button>
+        <button type="button" class="btn-secondary btn-sm" id="clearHistoryBtn">Clear History</button>
+      </div>
+    </div>
+    <div style="overflow-x:auto">
+      <table>
+        <thead>
+          <tr>
+            <th>Batch ID</th>
+            <th>Status</th>
+            <th>Model</th>
+            <th>Created</th>
+            <th>Requests</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="batchTableBody">
+          <tr><td colspan="6" class="muted" style="text-align:center;padding:18px">No batches yet.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+</div>
+
+<script>
+(function() {
+  "use strict";
+
+  // ============================================================
+  // Constants
+  // ============================================================
+  const API_BASE          = "";  // same origin; the Worker is /v1/*
+  const ENDPOINT          = "/v1/responses";
+  const HISTORY_KEY       = "oai_batch_history_v6";
+  const DRAFT_KEY         = "oai_batch_draft_v6";
+  const UPLOADED_KEY      = "oai_batch_uploaded_v6";
+  const BACKGROUND_KEY    = "oai_batch_bg_v3";
+  const POLL_INTERVAL_MS  = 10000;
+  const BG_POLL_INTERVAL_MS = 12000;
+  const MAX_HISTORY_ENTRIES = 100;
+  const JSONL_PREVIEW_LINES = 20;
+  const TERMINAL          = new Set(["completed","failed","expired","cancelled"]);
+  const BG_TERMINAL       = new Set(["completed","failed","cancelled","incomplete"]);
+  const MAX_TEXT_FILE     = 2 * 1024 * 1024;
+  const MAX_METADATA_KEYS = 16;
+
+  const FALLBACK_MODELS = [
+    "gpt-6-astra","gpt-6-astra-mini","gpt-6-sol","gpt-6-luna",
+    "gpt-5.6","gpt-5.6-sol","gpt-5.6-terra","gpt-5.6-luna",
+    "gpt-5.5","gpt-5","gpt-5-mini","gpt-4o","gpt-4o-mini"
+  ];
+
+  const REASONING_EFFORTS = ["none","minimal","low","medium","high","xhigh","max"];
+  const CACHE_TTLS = ["12h","30m","24h","nocache","none"];
+
+  // ============================================================
+  // DOM
+  // ============================================================
+  const $ = id => document.getElementById(id);
+  const modelInput       = $("modelInput");
+  const modelList        = $("modelList");
+  const reasoningEffortSelect = $("reasoningEffortSelect");
+  const cacheTTLSelect   = $("cacheTTLSelect");
+  const ttlWarning       = $("ttlWarning");
+  const fetchModelsBtn   = $("fetchModelsBtn");
+  const modelsStatus     = $("modelsStatus");
+  const metadataInput    = $("metadataInput");
+  const customIdInput    = $("customIdInput");
+  const regenIdBtn       = $("regenIdBtn");
+  const roleTabs         = $("roleTabs");
+  const messageInput     = $("messageInput");
+  const fileInput        = $("fileInput");
+  const attachedFilesEl  = $("attachedFiles");
+  const addMessageBtn    = $("addMessageBtn");
+  const composerMessages = $("composerMessages");
+  const composerTokenCount = $("composerTokenCount");
+  const verifyComposerTokensBtn = $("verifyComposerTokensBtn");
+  const composerServerTokenResult = $("composerServerTokenResult");
+  const previousResponseIdInput = $("previousResponseIdInput");
+  const previousResponseList = $("previousResponseList");
+  const extraParamsInput = $("extraParamsInput");
+  const addRequestBtn    = $("addRequestBtn");
+  const submitFlexBtn    = $("submitFlexBtn");
+  const clearComposerBtn = $("clearComposerBtn");
+  const composerMsg      = $("composerMsg");
+  const requestCount     = $("requestCount");
+  const requestList      = $("requestList");
+  const payloadSummary   = $("payloadSummary");
+  const batchBodyPreview = $("batchBodyPreview");
+  const requestPrettyPreview = $("requestPrettyPreview");
+  const jsonlPreview     = $("jsonlPreview");
+  const batchTokenCount  = $("batchTokenCount");
+  const uploadBtn        = $("uploadBtn");
+  const downloadJsonlBtn = $("downloadJsonlBtn");
+  const clearBatchBtn    = $("clearBatchBtn");
+  const uploadMsg        = $("uploadMsg");
+  const uploadedFileCount= $("uploadedFileCount");
+  const uploadedFileList = $("uploadedFileList");
+  const backgroundTableBody = $("backgroundTableBody");
+  const refreshBackgroundBtn= $("refreshBackgroundBtn");
+  const clearBackgroundBtn  = $("clearBackgroundBtn");
+  const backgroundMsg    = $("backgroundMsg");
+  const refreshAllBtn    = $("refreshAllBtn");
+  const clearHistoryBtn  = $("clearHistoryBtn");
+  const batchTableBody   = $("batchTableBody");
+
+  // ============================================================
+  // State
+  // ============================================================
+  let history = loadHistory();
+  let draft = loadDraft();
+  let uploadedFiles = loadUploaded();
+  let backgroundResponses = loadBackground();
+  let composerRole = "user";
+  let composerMessagesState = [];
+  let composerFiles = [];
+  let pollTimers = new Map();
+  let bgPollTimers = new Map();
+
+  // ============================================================
+  // Persistence
+  // ============================================================
+  function loadHistory() {
+    try { return JSON.parse(localStorage.getItem(HISTORY_KEY) || "[]"); }
+    catch { return []; }
+  }
+  function saveHistory() {
+    try {
+      history = history.slice(0, MAX_HISTORY_ENTRIES);
+      localStorage.setItem(HISTORY_KEY, JSON.stringify(history));
+    } catch (e) { console.warn("history save failed", e); }
+  }
+  function loadDraft() {
+    try {
+      const raw = JSON.parse(localStorage.getItem(DRAFT_KEY) || "null");
+      if (raw && typeof raw === "object") {
+        return {
+          model: typeof raw.model === "string" ? raw.model : "",
+          reasoningEffort: REASONING_EFFORTS.includes(raw.reasoningEffort) ? raw.reasoningEffort : "max",
+          cacheTTL: CACHE_TTLS.includes(raw.cacheTTL) ? raw.cacheTTL : "12h",
+          metadata: typeof raw.metadata === "string" ? raw.metadata : "",
+          requests: Array.isArray(raw.requests) ? raw.requests : []
+        };
+      }
+    } catch {}
+    return { model:"", reasoningEffort:"max", cacheTTL:"12h", metadata:"", requests:[] };
+  }
+  function saveDraft() {
+    try { localStorage.setItem(DRAFT_KEY, JSON.stringify(draft)); }
+    catch (e) { console.warn("draft save failed", e); }
+  }
+  function loadUploaded() {
+    try { return JSON.parse(localStorage.getItem(UPLOADED_KEY) || "[]"); }
+    catch { return []; }
+  }
+  function saveUploaded() {
+    try {
+      uploadedFiles = uploadedFiles.slice(0, MAX_HISTORY_ENTRIES);
+      localStorage.setItem(UPLOADED_KEY, JSON.stringify(uploadedFiles));
+    } catch (e) { console.warn("uploaded save failed", e); }
+  }
+  function loadBackground() {
+    try { return JSON.parse(localStorage.getItem(BACKGROUND_KEY) || "[]"); }
+    catch { return []; }
+  }
+  function saveBackground() {
+    try {
+      backgroundResponses = backgroundResponses.slice(0, MAX_HISTORY_ENTRIES);
+      localStorage.setItem(BACKGROUND_KEY, JSON.stringify(backgroundResponses));
+    } catch (e) { console.warn("background save failed", e); }
+  }
+
+  // ============================================================
+  // Utilities
+  // ============================================================
+  const escapeHtml = s => String(s == null ? "" : s).replace(/[&<>"']/g, c => (
+    { "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;" }[c]
+  ));
+  const genId = () => "req-" + Math.random().toString(36).slice(2, 10);
+  const fmtBytes = n => n < 1024 ? n + " B" : n < 1048576 ? (n/1024).toFixed(1) + " KB" : (n/1048576).toFixed(1) + " MB";
+  const fmtDate = ts => ts ? new Date(ts * 1000).toLocaleString() : "—";
+
+  function showMsg(el, text, type) {
+    el.textContent = text;
+    el.className = "message " + (type || "info");
+    el.classList.remove("hidden");
+  }
+  function hideMsg(el) { el.classList.add("hidden"); }
+
+  function statusBadge(status) {
+    const cls = "status status-" + String(status || "unknown").replace(/\s+/g, "_");
+    return `<span class="${cls}">${escapeHtml(status || "unknown")}</span>`;
+  }
+
+  async function api(path, options = {}) {
+    let res;
+    try { res = await fetch(API_BASE + path, options); }
+    catch (e) { throw new Error("Network error: " + e.message); }
+    if (!res.ok) {
+      let detail = "";
+      try { const j = await res.json(); detail = j.error?.message || JSON.stringify(j); }
+      catch { detail = await res.text().catch(() => ""); }
+      const err = new Error(`HTTP ${res.status}: ${detail || res.statusText}`);
+      err.status = res.status;
+      throw err;
+    }
+    return res;
+  }
+
+  // ============================================================
+  // Local token estimate (~4 chars/token)
+  // ============================================================
+  function estimateChatTokens(messages) {
+    let total = 3; // priming overhead
+    for (const m of messages) {
+      total += Math.ceil(String(m.content || "").length / 4) + 4;
+    }
+    return total;
+  }
+
+  function countComposerTokens() {
+    const msgs = composerMessagesState.slice();
+    const pendingContent = buildMessageContent();
+    if (pendingContent.trim()) msgs.push({ role: composerRole, content: pendingContent });
+    if (msgs.length === 0) return null;
+    return estimateChatTokens(msgs);
+  }
+
+  function updateComposerTokenReadout() {
+    const n = countComposerTokens();
+    composerTokenCount.textContent = n == null ? "—" : n.toLocaleString();
+    const hasContent =
+      composerMessagesState.length > 0 ||
+      buildMessageContent().trim().length > 0;
+    verifyComposerTokensBtn.disabled = !hasContent || !draft.model;
+    submitFlexBtn.disabled = !hasContent || !draft.model;
+    composerServerTokenResult.textContent = "";
+    composerServerTokenResult.className = "muted";
+  }
+
+  function updateBatchTokenReadout() {
+    if (draft.requests.length === 0) { batchTokenCount.textContent = "—"; return; }
+    let total = 0;
+    for (const req of draft.requests) total += estimateChatTokens(req.messages);
+    batchTokenCount.textContent = total.toLocaleString();
+  }
+
+  // ============================================================
+  // Cache TTL configuration
+  // ============================================================
+  function isNewCacheSchema(model) {
+    const m = String(model || "").toLowerCase();
+    if (/^(gpt-6|gpt-7|gpt-8|gpt-9)/.test(m)) return true;
+    if (/^gpt-5\.6/.test(m)) return true;
+    if (/^gpt-[1-4]/.test(m)) return false;
+    if (/^gpt-5(?!\.6)/.test(m)) return false;
+    if (/^o[1-4]/.test(m)) return false;
+    return true;
+  }
+
+  function getCacheConfig(ttl, model) {
+    if (!ttl || ttl === "none") return { params: null, warning: null };
+    if (ttl === "nocache") {
+      return { params: { prompt_cache_options: { mode: "explicit" } }, warning: null };
+    }
+    const isNew = isNewCacheSchema(model);
+    if (ttl === "12h" || ttl === "30m") {
+      if (!isNew) {
+        return {
+          params: { prompt_cache_options: { ttl } },
+          warning: `"${ttl}" applies to GPT-5.6+; current model "${model || "(unset)"}" may reject it. Use 24h or None for legacy models.`
+        };
+      }
+      return { params: { prompt_cache_options: { ttl } }, warning: null };
+    }
+    if (ttl === "24h") {
+      if (isNew) {
+        return {
+          params: { prompt_cache_retention: "24h" },
+          warning: `"24h" is not supported on GPT-5.6+; current model "${model || "(unset)"}" will reject it. Use 12h, 30m, or No caching.`
+        };
+      }
+      return { params: { prompt_cache_retention: "24h" }, warning: null };
+    }
+    return { params: null, warning: null };
+  }
+
+  function updateTTLWarning() {
+    const { warning } = getCacheConfig(draft.cacheTTL, draft.model);
+    if (warning) showMsg(ttlWarning, warning, "warn");
+    else hideMsg(ttlWarning);
+  }
+
+  // ============================================================
+  // Message -> Responses mapping
+  // ============================================================
+  function splitMessagesForResponses(messages) {
+    const systems = messages.filter(m => m.role === "system" || m.role === "developer");
+    const rest    = messages.filter(m => m.role !== "system" && m.role !== "developer");
+    const instructions = systems.map(m => String(m.content || "")).join("\n\n");
+    const input = rest.map(m => ({
+      role: m.role,
+      content: typeof m.content === "string" ? m.content : ""
+    }));
+    return { instructions, input };
+  }
+
+  // ============================================================
+  // Exact token count via the Worker
+  // ============================================================
+  async function verifyComposerTokensWithServer() {
+    if (!draft.model) { composerServerTokenResult.textContent = "Set a model first."; return; }
+    const msgs = composerMessagesState.slice();
+    const pendingContent = buildMessageContent();
+    if (pendingContent.trim()) msgs.push({ role: composerRole, content: pendingContent });
+    if (msgs.length === 0) { composerServerTokenResult.textContent = "Nothing to count."; return; }
+
+    const { instructions, input } = splitMessagesForResponses(msgs);
+    const body = { model: draft.model };
+    if (instructions) body.instructions = instructions;
+    body.input = input.length ? input : "";
+
+    const btn = verifyComposerTokensBtn;
+    const orig = btn.textContent;
+    btn.disabled = true;
+    btn.textContent = "Checking…";
+    composerServerTokenResult.textContent = "";
+    composerServerTokenResult.className = "muted";
+
+    try {
+      const res = await api("/v1/responses/input_tokens", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body)
+      });
+      const data = await res.json();
+      const serverCount = data.input_tokens;
+      const localCount = countComposerTokens();
+      const delta = (localCount == null) ? null : serverCount - localCount;
+      const deltaText = delta == null ? "" :
+        ` · approx ${localCount.toLocaleString()} · Δ ${delta > 0 ? "+" : ""}${delta}`;
+      composerServerTokenResult.innerHTML =
+        `Exact: <strong>${serverCount.toLocaleString()}</strong> input tokens${deltaText}`;
+    } catch (err) {
+      composerServerTokenResult.textContent = "Token count failed: " + err.message;
+      composerServerTokenResult.className = "message message-error";
+      composerServerTokenResult.style.padding = "4px 8px";
+    } finally {
+      btn.disabled = false;
+      btn.textContent = orig;
+    }
+  }
+  verifyComposerTokensBtn.addEventListener("click", verifyComposerTokensWithServer);
+
+  // ============================================================
+  // Previous response ID datalist
+  // ============================================================
+  function renderPreviousResponseOptions() {
+    const ids = backgroundResponses
+      .filter(b => b.status === "completed")
+      .map(b => b.id);
+    previousResponseList.innerHTML = ids
+      .map(id => `<option value="${escapeHtml(id)}"></option>`)
+      .join("");
+  }
+
+  // ============================================================
+  // Models fetch
+  // ============================================================
+  function setModelsStatus(kind, msg) {
+    modelsStatus.textContent = msg;
+    modelsStatus.style.color =
+      kind === "err" ? "var(--danger)" : kind === "ok" ? "#198754" : "var(--muted)";
+  }
+
+  function populateModels(ids) {
+    const seen = new Set(), items = [];
+    for (const id of ids) { if (!id || seen.has(id)) continue; seen.add(id); items.push(id); }
+    items.sort((a, b) => a.localeCompare(b));
+    modelList.innerHTML = items.map(m => `<option value="${escapeHtml(m)}"></option>`).join("");
+  }
+
+  function isLikelyResponsesModel(id) { return /^(gpt-|o[0-9]|chatgpt-)/.test(id); }
+
+  async function fetchModels() {
+    fetchModelsBtn.disabled = true;
+    const orig = fetchModelsBtn.textContent;
+    fetchModelsBtn.textContent = "…";
+    setModelsStatus("info", "Loading…");
+    try {
+      const res = await api("/v1/models", { method: "GET" });
+      const data = await res.json();
+      const ids = (data && Array.isArray(data.data) ? data.data : [])
+        .map(m => m.id).filter(isLikelyResponsesModel);
+      if (ids.length) {
+        populateModels(ids);
+        setModelsStatus("ok", `${ids.length} models`);
+      } else {
+        populateModels(FALLBACK_MODELS);
+        setModelsStatus("ok", "fallback list");
+      }
+    } catch (err) {
+      setModelsStatus("err", err.message);
+      populateModels(FALLBACK_MODELS);
+    } finally {
+      fetchModelsBtn.disabled = false;
+      fetchModelsBtn.textContent = orig;
+    }
+  }
+  fetchModelsBtn.addEventListener("click", fetchModels);
+
+  // ============================================================
+  // Composer
+  // ============================================================
+  function setRole(role) {
+    composerRole = role;
+    Array.from(roleTabs.children).forEach(t =>
+      t.classList.toggle("active", t.dataset.role === role)
+    );
+    updateComposerTokenReadout();
+  }
+  roleTabs.addEventListener("click", e => {
+    const btn = e.target.closest(".role-tab");
+    if (btn) setRole(btn.dataset.role);
+  });
+
+  function renderAttachedFiles() {
+    if (composerFiles.length === 0) { attachedFilesEl.innerHTML = ""; return; }
+    attachedFilesEl.innerHTML = composerFiles.map((f, i) => `
+      <span class="file-chip">
+        ${escapeHtml(f.name)}
+        <span class="muted">${fmtBytes(f.size)}</span>
+        <button type="button" data-index="${i}" aria-label="Remove">×</button>
+      </span>
+    `).join("");
+  }
+  attachedFilesEl.addEventListener("click", e => {
+    const btn = e.target.closest("button[data-index]");
+    if (!btn) return;
+    composerFiles.splice(Number(btn.dataset.index), 1);
+    renderAttachedFiles();
+    updateComposerTokenReadout();
+  });
+
+  function renderComposerMessages() {
+    if (composerMessagesState.length === 0) {
+      composerMessages.innerHTML = `<p class="muted">No messages in this request yet.</p>`;
+      return;
+    }
+    composerMessages.innerHTML = composerMessagesState.map((m, i) => `
+      <div class="message-card">
+        <div class="role ${m.role}">${escapeHtml(m.role)}</div>
+        <div class="content">${escapeHtml(m.content)}</div>
+        <div class="msg-actions">
+          <button type="button" class="btn-secondary btn-sm" data-action="edit-msg" data-index="${i}">Edit</button>
+          <button type="button" class="btn-secondary btn-sm" data-action="remove-msg" data-index="${i}">Remove</button>
+        </div>
+      </div>
+    `).join("");
+  }
+  composerMessages.addEventListener("click", e => {
+    const btn = e.target.closest("button[data-action]");
+    if (!btn) return;
+    const idx = Number(btn.dataset.index);
+    if (btn.dataset.action === "remove-msg") {
+      composerMessagesState.splice(idx, 1);
+      renderComposerMessages();
+      updateComposerTokenReadout();
+    } else if (btn.dataset.action === "edit-msg") {
+      const m = composerMessagesState[idx];
+      messageInput.value = m.content;
+      setRole(m.role);
+      composerFiles = [];
+      renderAttachedFiles();
+      composerMessagesState.splice(idx, 1);
+      renderComposerMessages();
+      updateComposerTokenReadout();
+      messageInput.focus();
+    }
+  });
+
+  function fileToText(file) {
+    return new Promise((resolve, reject) => {
+      const r = new FileReader();
+      r.onload = () => resolve(String(r.result || ""));
+      r.onerror = () => reject(r.error || new Error("Read failed"));
+      r.readAsText(file);
+    });
+  }
+
+  fileInput.addEventListener("change", async () => {
+    const files = Array.from(fileInput.files || []);
+    fileInput.value = "";
+    for (const f of files) {
+      try {
+        if (f.size > MAX_TEXT_FILE) {
+          showMsg(composerMsg, `Skipped ${f.name}: exceeds ${fmtBytes(MAX_TEXT_FILE)}.`, "error");
+          continue;
+        }
+        const content = await fileToText(f);
+        composerFiles.push({ name: f.name, size: f.size, content });
+      } catch (err) {
+        showMsg(composerMsg, `Failed to read ${f.name}: ${err.message}`, "error");
+      }
+    }
+    renderAttachedFiles();
+    updateComposerTokenReadout();
+  });
+
+  function buildMessageContent() {
+    let text = messageInput.value;
+    if (composerFiles.length) {
+      for (const f of composerFiles) {
+        const delim = text ? "\n\n" : "";
+        text += `${delim}--- ${f.name} ---\n${f.content}`;
+      }
+    }
+    return text;
+  }
+
+  function addMessage() {
+    const content = buildMessageContent();
+    if (!content.trim()) { showMsg(composerMsg, "Message content is empty.", "error"); return; }
+    composerMessagesState.push({ role: composerRole, content });
+    messageInput.value = "";
+    composerFiles = [];
+    renderAttachedFiles();
+    renderComposerMessages();
+    updateComposerTokenReadout();
+    hideMsg(composerMsg);
+    messageInput.focus();
+  }
+  addMessageBtn.addEventListener("click", addMessage);
+  messageInput.addEventListener("keydown", e => {
+    if ((e.ctrlKey || e.metaKey) && e.key === "Enter") { e.preventDefault(); addMessage(); }
+  });
+  messageInput.addEventListener("input", updateComposerTokenReadout);
+
+  function clearComposer() {
+    composerMessagesState = [];
+    composerFiles = [];
+    messageInput.value = "";
+    extraParamsInput.value = "";
+    customIdInput.value = "";
+    previousResponseIdInput.value = "";
+    setRole("user");
+    renderAttachedFiles();
+    renderComposerMessages();
+    updateComposerTokenReadout();
+    hideMsg(composerMsg);
+  }
+  clearComposerBtn.addEventListener("click", clearComposer);
+
+  regenIdBtn.addEventListener("click", () => { customIdInput.value = genId(); });
+
+  // ============================================================
+  // Validation helpers
+  // ============================================================
+  function parseMetadata() {
+    const raw = (draft.metadata || "").trim();
+    if (!raw) return null;
+    let parsed;
+    try { parsed = JSON.parse(raw); }
+    catch (e) { throw new Error("Metadata is not valid JSON: " + e.message); }
+    if (typeof parsed !== "object" || parsed === null || Array.isArray(parsed)) {
+      throw new Error("Metadata must be a JSON object.");
+    }
+    const keys = Object.keys(parsed);
+    if (keys.length > MAX_METADATA_KEYS) {
+      throw new Error(`Metadata has ${keys.length} keys (max ${MAX_METADATA_KEYS}).`);
+    }
+    for (const k of keys) {
+      if (k.length > 64) throw new Error(`Metadata key "${k}" exceeds 64 chars.`);
+      if (typeof parsed[k] !== "string") throw new Error(`Metadata value for "${k}" must be a string.`);
+    }
+    return parsed;
+  }
+
+  function parseExtraParams() {
+    const raw = extraParamsInput.value.trim();
+    if (!raw) return {};
+    let parsed;
+    try { parsed = JSON.parse(raw); }
+    catch (e) { throw new Error("Extra params is not valid JSON: " + e.message); }
+    if (typeof parsed !== "object" || parsed === null || Array.isArray(parsed)) {
+      throw new Error("Extra params must be a JSON object.");
+    }
+    return parsed;
+  }
+
+  function buildBodyForRequest(req) {
+    const { instructions, input } = splitMessagesForResponses(req.messages);
+    const body = { model: draft.model, input: input.length ? input : "", store: true };
+    if (instructions) body.instructions = instructions;
+    if (draft.reasoningEffort && draft.reasoningEffort !== "none") {
+      body.reasoning = { effort: draft.reasoningEffort };
+    }
+    const { params: cacheParams } = getCacheConfig(draft.cacheTTL, draft.model);
+    if (cacheParams) Object.assign(body, cacheParams);
+    Object.assign(body, req.extraParams || {});
+    return body;
+  }
+
+  function buildEnvelope(req) {
+    return {
+      custom_id: req.custom_id,
+      method: "POST",
+      url: ENDPOINT,
+      body: buildBodyForRequest(req)
+    };
+  }
+
+  // ============================================================
+  // Add request to batch
+  // ============================================================
+  addRequestBtn.addEventListener("click", () => {
+    try {
+      if (!draft.model) throw new Error("Set a model in Batch Settings first.");
+      if (composerMessagesState.length === 0) throw new Error("Add at least one message.");
+      const custom_id = customIdInput.value.trim() || genId();
+      if (draft.requests.some(r => r.custom_id === custom_id)) {
+        throw new Error(`Custom ID "${custom_id}" is already used in this batch.`);
+      }
+      const extraParams = parseExtraParams();
+      draft.requests.push({ custom_id, messages: composerMessagesState.slice(), extraParams });
+      saveDraft();
+      clearComposer();
+      customIdInput.value = genId();
+      renderRequests();
+      renderPreviews();
+      hideMsg(composerMsg);
+    } catch (err) {
+      showMsg(composerMsg, err.message, "error");
+    }
+  });
+
+  // ============================================================
+  // Submit as Background Flex
+  // ============================================================
+  async function submitBackgroundFlex() {
+    try {
+      if (!draft.model) throw new Error("Set a model first.");
+      if (composerMessagesState.length === 0) throw new Error("Add at least one message.");
+      const { warning } = getCacheConfig(draft.cacheTTL, draft.model);
+      if (warning) throw new Error(warning);
+
+      const msgs = composerMessagesState.slice();
+      const { instructions, input } = splitMessagesForResponses(msgs);
+      const body = {
+        model: draft.model,
+        background: true,
+        service_tier: "flex",
+        store: true
+      };
+      if (instructions) body.instructions = instructions;
+      body.input = input.length ? input : "";
+      if (draft.reasoningEffort && draft.reasoningEffort !== "none") {
+        body.reasoning = { effort: draft.reasoningEffort };
+      }
+      const { params: cacheParams } = getCacheConfig(draft.cacheTTL, draft.model);
+      if (cacheParams) Object.assign(body, cacheParams);
+
+      const prevId = previousResponseIdInput.value.trim();
+      if (prevId) body.previous_response_id = prevId;
+
+      try {
+        const extra = parseExtraParams();
+        Object.assign(body, extra);
+      } catch (e) { throw e; }
+
+      const btn = submitFlexBtn;
+      btn.disabled = true;
+      btn.innerHTML = '<span class="spinner"></span>Submitting…';
+      hideMsg(composerMsg);
+
+      const res = await api("/v1/responses", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body)
+      });
+      const data = await res.json();
+
+      let preview = "";
+      const lastUser = [...composerMessagesState].reverse().find(m => m.role === "user");
+      if (lastUser) preview = String(lastUser.content || "").slice(0, 120);
+      if (preview.length === 120) preview += "…";
+
+      backgroundResponses.unshift({
+        id: data.id,
+        status: data.status,
+        model: draft.model,
+        createdAt: Math.floor(Date.now() / 1000),
+        promptPreview: preview,
+        serviceTier: "flex",
+        usage: data.usage || null,
+        lastChecked: Date.now()
+      });
+      saveBackground();
+      renderBackground();
+      renderPreviousResponseOptions();
+
+      clearComposer();
+      showMsg(composerMsg, `Submitted ${data.id}. Polling in Background Responses.`, "success");
+      scheduleBackgroundPoll(data.id, 3000);
+    } catch (err) {
+      showMsg(composerMsg, err.message, "error");
+    } finally {
+      submitFlexBtn.textContent = "Submit as Background Flex";
+      const hasContent = composerMessagesState.length > 0 || buildMessageContent().trim().length > 0;
+      submitFlexBtn.disabled = !hasContent || !draft.model;
+    }
+  }
+  submitFlexBtn.addEventListener("click", submitBackgroundFlex);
+
+  // ============================================================
+  // Render requests + previews
+  // ============================================================
+  function renderRequests() {
+    requestCount.textContent = String(draft.requests.length);
+    uploadBtn.disabled = draft.requests.length === 0;
+    downloadJsonlBtn.disabled = draft.requests.length === 0;
+
+    if (draft.requests.length === 0) {
+      requestList.innerHTML = `<p class="muted">No requests yet. Compose one above.</p>`;
+    } else {
+      requestList.innerHTML = draft.requests.map((r, i) => {
+        const last = r.messages[r.messages.length - 1];
+        let preview = String(last?.content || "");
+        if (preview.length > 140) preview = preview.slice(0, 140) + "…";
+        const extras = Object.keys(r.extraParams || {});
+        const extrasBadge = extras.length
+          ? `<span class="badge" style="margin-left:4px">+${extras.length} params</span>` : "";
+        return `
+          <div class="request-card">
+            <div class="request-head">
+              <div>
+                <code style="font-size:.8rem">${escapeHtml(r.custom_id)}</code>
+                <span class="badge" style="margin-left:6px">${r.messages.length} msg</span>
+                ${extrasBadge}
+              </div>
+              <button type="button" class="btn-secondary btn-sm" data-action="remove-req" data-index="${i}">Remove</button>
+            </div>
+            <div class="preview">${escapeHtml(preview)}</div>
+          </div>
+        `;
+      }).join("");
+    }
+    updateBatchTokenReadout();
+  }
+
+  requestList.addEventListener("click", e => {
+    const btn = e.target.closest("button[data-action='remove-req']");
+    if (!btn) return;
+    draft.requests.splice(Number(btn.dataset.index), 1);
+    saveDraft();
+    renderRequests();
+    renderPreviews();
+  });
+
+  function renderPreviews() {
+    const count = draft.requests.length;
+    if (count === 0) {
+      payloadSummary.textContent = "No requests in the batch yet.";
+      batchBodyPreview.value = "";
+      requestPrettyPreview.value = "";
+      jsonlPreview.value = "";
+      updateBatchTokenReadout();
+      return;
+    }
+    const cacheSummary = draft.cacheTTL === "none" ? "none" : draft.cacheTTL;
+    payloadSummary.textContent =
+      `${count} request${count === 1 ? "" : "s"} · model ${draft.model || "(unset)"} · reasoning ${draft.reasoningEffort || "(unset)"} · cache ${cacheSummary} · endpoint ${ENDPOINT} · completion window 24h`;
+
+    let meta = null;
+    try { meta = parseMetadata(); } catch {}
+    const batchBody = {
+      input_file_id: "(assigned after upload)",
+      endpoint: ENDPOINT,
+      completion_window: "24h"
+    };
+    if (meta) batchBody.metadata = meta;
+    batchBodyPreview.value = JSON.stringify(batchBody, null, 2);
+    requestPrettyPreview.value = JSON.stringify(buildEnvelope(draft.requests[0]), null, 2);
+
+    const lines = draft.requests.map(r => JSON.stringify(buildEnvelope(r)));
+    const shown = lines.slice(0, JSONL_PREVIEW_LINES);
+    if (lines.length > JSONL_PREVIEW_LINES) {
+      shown.push(`… (${lines.length - JSONL_PREVIEW_LINES} more lines; use Download JSONL for the full file)`);
+    }
+    jsonlPreview.value = shown.join("\n");
+    updateBatchTokenReadout();
+  }
+
+  // ============================================================
+  // Persisted inputs
+  // ============================================================
+  modelInput.addEventListener("input", () => {
+    draft.model = modelInput.value.trim();
+    saveDraft();
+    renderPreviews();
+    updateComposerTokenReadout();
+    updateBatchTokenReadout();
+    updateTTLWarning();
+  });
+  reasoningEffortSelect.addEventListener("change", () => {
+    draft.reasoningEffort = reasoningEffortSelect.value;
+    saveDraft();
+    renderPreviews();
+  });
+  cacheTTLSelect.addEventListener("change", () => {
+    draft.cacheTTL = cacheTTLSelect.value;
+    saveDraft();
+    renderPreviews();
+    updateTTLWarning();
+  });
+  metadataInput.addEventListener("input", () => {
+    draft.metadata = metadataInput.value;
+    saveDraft();
+    renderPreviews();
+  });
+
+  // ============================================================
+  // Download JSONL / clear batch
+  // ============================================================
+  downloadJsonlBtn.addEventListener("click", () => {
+    if (draft.requests.length === 0) return;
+    const text = draft.requests.map(r => JSON.stringify(buildEnvelope(r))).join("\n") + "\n";
+    const blob = new Blob([text], { type: "application/jsonl" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `batch-${Date.now()}.jsonl`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+  });
+
+  clearBatchBtn.addEventListener("click", () => {
+    if (draft.requests.length > 0 && !confirm("Clear the current batch (requests only; uploaded files and history are unaffected)?")) return;
+    draft.requests = [];
+    saveDraft();
+    renderRequests();
+    renderPreviews();
+    hideMsg(uploadMsg);
+  });
+
+  // ============================================================
+  // Upload only
+  // ============================================================
+  uploadBtn.addEventListener("click", async () => {
+    if (draft.requests.length === 0) { showMsg(uploadMsg, "No requests in the batch.", "error"); return; }
+    if (!draft.model) { showMsg(uploadMsg, "No model selected.", "error"); return; }
+    const { warning } = getCacheConfig(draft.cacheTTL, draft.model);
+    if (warning) { showMsg(uploadMsg, warning, "error"); return; }
+
+    uploadBtn.disabled = true;
+    downloadJsonlBtn.disabled = true;
+    uploadBtn.innerHTML = '<span class="spinner"></span>Uploading…';
+    hideMsg(uploadMsg);
+
+    try {
+      const jsonl = draft.requests.map(r => JSON.stringify(buildEnvelope(r))).join("\n") + "\n";
+      const blob = new Blob([jsonl], { type: "application/jsonl" });
+      const filename = `batch-${Date.now()}.jsonl`;
+      const file = new File([blob], filename, { type: "application/jsonl" });
+
+      const form = new FormData();
+      form.append("purpose", "batch");
+      form.append("file", file);
+
+      const uploadRes = await api("/v1/files", { method: "POST", body: form });
+      const uploadData = await uploadRes.json();
+      const fileId = uploadData.id;
+
+      uploadedFiles.unshift({
+        id: fileId,
+        filename: filename,
+        createdAt: Math.floor(Date.now() / 1000),
+        requestCount: draft.requests.length,
+        model: draft.model,
+        reasoningEffort: draft.reasoningEffort,
+        cacheTTL: draft.cacheTTL,
+        endpoint: ENDPOINT
+      });
+      saveUploaded();
+      renderUploadedFiles();
+      showMsg(uploadMsg, `Uploaded ${filename} as ${fileId}. Ready to start.`, "success");
+    } catch (err) {
+      showMsg(uploadMsg, err.message, "error");
+    } finally {
+      uploadBtn.textContent = "Upload JSONL";
+      uploadBtn.disabled = draft.requests.length === 0;
+      downloadJsonlBtn.disabled = draft.requests.length === 0;
+    }
+  });
+
+  // ============================================================
+  // Uploaded files list + start batch
+  // ============================================================
+  function renderUploadedFiles() {
+    uploadedFileCount.textContent = String(uploadedFiles.length);
+    if (uploadedFiles.length === 0) {
+      uploadedFileList.innerHTML = `<p class="muted">No uploaded files waiting. Use “Upload JSONL” to stage one.</p>`;
+      return;
+    }
+    uploadedFileList.innerHTML = uploadedFiles.map((f, i) => `
+      <div class="uploaded-file-row">
+        <div class="grow">
+          <div class="file-id">${escapeHtml(f.id)}</div>
+          <div class="meta">${escapeHtml(f.filename)} · ${f.requestCount} request${f.requestCount === 1 ? "" : "s"} · model ${escapeHtml(f.model || "—")} · cache ${escapeHtml(f.cacheTTL || "—")} · uploaded ${fmtDate(f.createdAt)}</div>
+        </div>
+        <button type="button" class="btn-primary btn-sm" data-action="start-batch" data-index="${i}">✓ Start Batch</button>
+        <button type="button" class="btn-secondary btn-sm" data-action="discard-upload" data-index="${i}">Discard</button>
+      </div>
+    `).join("");
+  }
+
+  uploadedFileList.addEventListener("click", async e => {
+    const btn = e.target.closest("button[data-action]");
+    if (!btn) return;
+    const idx = Number(btn.dataset.index);
+    const fileRec = uploadedFiles[idx];
+    if (!fileRec) return;
+
+    if (btn.dataset.action === "discard-upload") {
+      uploadedFiles.splice(idx, 1);
+      saveUploaded();
+      renderUploadedFiles();
+      return;
+    }
+
+    if (btn.dataset.action === "start-batch") {
+      btn.disabled = true;
+      btn.innerHTML = '<span class="spinner"></span>Starting…';
+      try {
+        let metadata;
+        try { metadata = parseMetadata(); }
+        catch (err) { throw new Error(err.message); }
+
+        const batchBody = {
+          input_file_id: fileRec.id,
+          endpoint: fileRec.endpoint || ENDPOINT,
+          completion_window: "24h"
+        };
+        if (metadata) batchBody.metadata = metadata;
+
+        const batchRes = await api("/v1/batches", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(batchBody)
+        });
+        const batchData = await batchRes.json();
+
+        history.unshift({
+          id: batchData.id,
+          model: fileRec.model,
+          endpoint: fileRec.endpoint || ENDPOINT,
+          input_file_id: fileRec.id,
+          status: batchData.status,
+          output_file_id: batchData.output_file_id || null,
+          error_file_id: batchData.error_file_id || null,
+          created_at: batchData.created_at,
+          request_counts: batchData.request_counts || null,
+          last_checked: Date.now()
+        });
+        saveHistory();
+        renderHistory();
+
+        uploadedFiles.splice(idx, 1);
+        saveUploaded();
+        renderUploadedFiles();
+        showMsg(uploadMsg, `Batch started: ${batchData.id}`, "success");
+        schedulePoll(batchData.id);
+      } catch (err) {
+        btn.disabled = false;
+        btn.textContent = "✓ Start Batch";
+        showMsg(uploadMsg, err.message, "error");
+      }
+    }
+  });
+
+  // ============================================================
+  // Batch polling
+  // ============================================================
+  function schedulePoll(id, delayMs = POLL_INTERVAL_MS) {
+    clearPollTimer(id);
+    pollTimers.set(id, setTimeout(() => pollBatch(id), delayMs));
+  }
+  function clearPollTimer(id) {
+    if (pollTimers.has(id)) { clearTimeout(pollTimers.get(id)); pollTimers.delete(id); }
+  }
+  async function pollBatch(id) {
+    const rec = history.find(b => b.id === id);
+    if (!rec) return;
+    try {
+      const res = await api(`/v1/batches/${id}`, { method: "GET" });
+      const data = await res.json();
+      rec.status = data.status;
+      rec.output_file_id = data.output_file_id || rec.output_file_id;
+      rec.error_file_id  = data.error_file_id  || rec.error_file_id;
+      rec.request_counts = data.request_counts || rec.request_counts;
+      rec.last_checked = Date.now();
+      saveHistory();
+      renderHistory();
+      if (!TERMINAL.has(data.status)) schedulePoll(id);
+      else clearPollTimer(id);
+    } catch (err) {
+      console.warn("poll failed", id, err.message);
+      if (!TERMINAL.has(rec.status)) schedulePoll(id, POLL_INTERVAL_MS * 2);
+    }
+  }
+
+  refreshAllBtn.addEventListener("click", async () => {
+    refreshAllBtn.disabled = true;
+    refreshAllBtn.textContent = "Refreshing…";
+    for (const b of history) await pollBatch(b.id);
+    refreshAllBtn.disabled = false;
+    refreshAllBtn.textContent = "Refresh All";
+  });
+
+  // ============================================================
+  // Download batch results
+  // ============================================================
+  async function downloadFile(fileId, filename) {
+    if (!fileId) return;
+    try {
+      const res = await api(`/v1/files/${fileId}/content`, { method: "GET" });
+      if (window.showSaveFilePicker) {
+        try {
+          const handle = await window.showSaveFilePicker({
+            suggestedName: filename || `${fileId}.jsonl`,
+            types: [{ description: "JSONL", accept: { "application/jsonl": [".jsonl"] } }]
+          });
+          const writable = await handle.createWritable();
+          if (res.body && res.body.pipeTo) { await res.body.pipeTo(writable); }
+          else { await writable.write(await res.blob()); await writable.close(); }
+          return;
+        } catch (e) { if (e && e.name === "AbortError") return; }
+      }
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = filename || `${fileId}.jsonl`;
+      document.body.appendChild(a); a.click(); a.remove();
+      URL.revokeObjectURL(url);
+    } catch (err) { alert("Download failed: " + err.message); }
+  }
+
+  // ============================================================
+  // Batch history render
+  // ============================================================
+  function renderHistory() {
+    if (history.length === 0) {
+      batchTableBody.innerHTML = `<tr><td colspan="6" class="muted" style="text-align:center;padding:18px">No batches yet.</td></tr>`;
+      return;
+    }
+    batchTableBody.innerHTML = history.map(b => {
+      const counts = b.request_counts
+        ? `${b.request_counts.completed || 0} / ${b.request_counts.total || 0}` : "—";
+      const actions = [];
+      if (!TERMINAL.has(b.status)) {
+        actions.push(`<button type="button" class="btn-secondary btn-sm" data-action="poll" data-id="${escapeHtml(b.id)}">Refresh</button>`);
+      }
+      if (b.status === "completed" && b.output_file_id) {
+        actions.push(`<button type="button" class="btn-primary btn-sm" data-action="download" data-file-id="${escapeHtml(b.output_file_id)}" data-filename="batch-${escapeHtml(b.id)}-output.jsonl">Download Results</button>`);
+      }
+      if (b.error_file_id) {
+        actions.push(`<button type="button" class="btn-secondary btn-sm" data-action="download" data-file-id="${escapeHtml(b.error_file_id)}" data-filename="batch-${escapeHtml(b.id)}-errors.jsonl">Errors</button>`);
+      }
+      return `<tr>
+        <td><code style="font-size:.75rem">${escapeHtml(b.id)}</code></td>
+        <td>${statusBadge(b.status)}</td>
+        <td><code style="font-size:.75rem">${escapeHtml(b.model || "—")}</code></td>
+        <td>${fmtDate(b.created_at)}</td>
+        <td>${counts}</td>
+        <td><div class="actions">${actions.join("")}</div></td>
+      </tr>`;
+    }).join("");
+  }
+
+  batchTableBody.addEventListener("click", async e => {
+    const btn = e.target.closest("button[data-action]");
+    if (!btn) return;
+    if (btn.dataset.action === "poll") {
+      btn.disabled = true; btn.textContent = "…";
+      await pollBatch(btn.dataset.id);
+      btn.disabled = false; btn.textContent = "Refresh";
+    } else if (btn.dataset.action === "download") {
+      await downloadFile(btn.dataset.fileId, btn.dataset.filename);
+    }
+  });
+
+  clearHistoryBtn.addEventListener("click", () => {
+    if (!confirm("Remove all batch history from this browser? This does not cancel or delete anything on OpenAI.")) return;
+    history = [];
+    saveHistory();
+    for (const id of pollTimers.keys()) clearPollTimer(id);
+    renderHistory();
+  });
+
+  // ============================================================
+  // Background responses
+  // ============================================================
+  function renderBackground() {
+    if (backgroundResponses.length === 0) {
+      backgroundTableBody.innerHTML = `<tr><td colspan="6" class="muted" style="text-align:center;padding:18px">No background responses yet.</td></tr>`;
+      renderPreviousResponseOptions();
+      return;
+    }
+    backgroundTableBody.innerHTML = backgroundResponses.map(b => {
+      const actions = [];
+      if (!BG_TERMINAL.has(b.status)) {
+        actions.push(`<button type="button" class="btn-secondary btn-sm" data-action="bg-poll" data-id="${escapeHtml(b.id)}">Refresh</button>`);
+        actions.push(`<button type="button" class="btn-secondary btn-sm" data-action="bg-cancel" data-id="${escapeHtml(b.id)}">Cancel</button>`);
+      }
+      if (b.status === "completed") {
+        actions.push(`<button type="button" class="btn-flex btn-sm" data-action="bg-download" data-id="${escapeHtml(b.id)}">Download</button>`);
+      }
+      return `<tr>
+        <td><code style="font-size:.75rem">${escapeHtml(b.id)}</code></td>
+        <td>${statusBadge(b.status)}</td>
+        <td><code style="font-size:.75rem">${escapeHtml(b.model || "—")}</code></td>
+        <td>${fmtDate(b.createdAt)}</td>
+        <td class="muted" style="max-width:260px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHtml(b.promptPreview || "")}</td>
+        <td><div class="actions">${actions.join("")}</div></td>
+      </tr>`;
+    }).join("");
+    renderPreviousResponseOptions();
+  }
+
+  function scheduleBackgroundPoll(id, delayMs = BG_POLL_INTERVAL_MS) {
+    clearBackgroundTimer(id);
+    bgPollTimers.set(id, setTimeout(() => pollBackgroundResponse(id), delayMs));
+  }
+  function clearBackgroundTimer(id) {
+    if (bgPollTimers.has(id)) { clearTimeout(bgPollTimers.get(id)); bgPollTimers.delete(id); }
+  }
+
+  async function pollBackgroundResponse(id) {
+    const rec = backgroundResponses.find(r => r.id === id);
+    if (!rec) return;
+    try {
+      const res = await api(`/v1/responses/${id}`, { method: "GET" });
+      const data = await res.json();
+      rec.status = data.status;
+      if (data.usage) rec.usage = data.usage;
+      if (data.error) rec.error = data.error;
+      rec.lastChecked = Date.now();
+      saveBackground();
+      renderBackground();
+      if (!BG_TERMINAL.has(data.status)) scheduleBackgroundPoll(id);
+      else clearBackgroundTimer(id);
+    } catch (err) {
+      console.warn("bg poll failed", id, err.message);
+      if (!BG_TERMINAL.has(rec.status)) scheduleBackgroundPoll(id, BG_POLL_INTERVAL_MS * 2);
+    }
+  }
+
+  async function cancelBackgroundResponse(id) {
+    try {
+      await api(`/v1/responses/${id}/cancel`, { method: "POST" });
+      await pollBackgroundResponse(id);
+    } catch (err) { alert("Cancel failed: " + err.message); }
+  }
+
+  async function downloadBackgroundResponse(id) {
+    try {
+      const res = await api(`/v1/responses/${id}`, { method: "GET" });
+      const data = await res.json();
+      const json = JSON.stringify(data, null, 2);
+      const blob = new Blob([json], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `${id}.json`;
+      document.body.appendChild(a); a.click(); a.remove();
+      URL.revokeObjectURL(url);
+    } catch (err) { alert("Download failed: " + err.message); }
+  }
+
+  backgroundTableBody.addEventListener("click", async e => {
+    const btn = e.target.closest("button[data-action]");
+    if (!btn) return;
+    const id = btn.dataset.id;
+    if (btn.dataset.action === "bg-poll") {
+      btn.disabled = true; btn.textContent = "…";
+      await pollBackgroundResponse(id);
+      btn.disabled = false; btn.textContent = "Refresh";
+    } else if (btn.dataset.action === "bg-cancel") {
+      if (!confirm("Cancel this background response?")) return;
+      await cancelBackgroundResponse(id);
+    } else if (btn.dataset.action === "bg-download") {
+      await downloadBackgroundResponse(id);
+    }
+  });
+
+  refreshBackgroundBtn.addEventListener("click", async () => {
+    refreshBackgroundBtn.disabled = true;
+    refreshBackgroundBtn.textContent = "Refreshing…";
+    for (const b of backgroundResponses) await pollBackgroundResponse(b.id);
+    refreshBackgroundBtn.disabled = false;
+    refreshBackgroundBtn.textContent = "Refresh All";
+  });
+
+  clearBackgroundBtn.addEventListener("click", () => {
+    if (!confirm("Remove all Background Flex responses from this browser? This does not cancel or delete anything on OpenAI.")) return;
+    backgroundResponses = [];
+    saveBackground();
+    for (const id of bgPollTimers.keys()) clearBackgroundTimer(id);
+    renderBackground();
+  });
+
+  // ============================================================
+  // Multi-tab sync
+  // ============================================================
+  window.addEventListener("storage", e => {
+    if (e.key === HISTORY_KEY) { history = loadHistory(); renderHistory(); }
+    if (e.key === UPLOADED_KEY) { uploadedFiles = loadUploaded(); renderUploadedFiles(); }
+    if (e.key === BACKGROUND_KEY) {
+      backgroundResponses = loadBackground();
+      renderBackground();
+      renderPreviousResponseOptions();
+    }
+  });
+
+  // ============================================================
+  // Init
+  // ============================================================
+  modelInput.value = draft.model || "";
+  reasoningEffortSelect.value = draft.reasoningEffort || "max";
+  cacheTTLSelect.value = draft.cacheTTL || "12h";
+  metadataInput.value = draft.metadata || "";
+  customIdInput.value = genId();
+
+  populateModels(FALLBACK_MODELS);
+
+  renderAttachedFiles();
+  renderComposerMessages();
+  renderRequests();
+  renderPreviews();
+  renderUploadedFiles();
+  renderBackground();
+  renderPreviousResponseOptions();
+  renderHistory();
+  updateComposerTokenReadout();
+  updateTTLWarning();
+
+  for (const b of history) {
+    if (!TERMINAL.has(b.status)) schedulePoll(b.id, 2000);
+  }
+  for (const b of backgroundResponses) {
+    if (!BG_TERMINAL.has(b.status)) scheduleBackgroundPoll(b.id, 3000);
+  }
+})();
+</script>
+</body>
+</html>
