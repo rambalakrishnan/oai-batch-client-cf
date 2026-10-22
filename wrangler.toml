@@ -1,5 +1,5 @@
 name = "oai-batch-proxy"
-main = "src/index.ts"
+main = "src/cloudflare-worker.ts"
 compatibility_date = "2026-10-21"
 
 [observability]
