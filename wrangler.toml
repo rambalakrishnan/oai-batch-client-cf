@@ -1,0 +1,10 @@
+name = "oai-batch-proxy"
+main = "src/index.ts"
+compatibility_date = "2026-10-21"
+
+[observability]
+enabled = true
+
+[vars]
+MAX_BODY_BYTES = "262144000"
+UPSTREAM_TIMEOUT_MS = "600000"
